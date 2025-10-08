@@ -1,0 +1,203 @@
+---
+title: "In-class Practice with the `scorecard` data"
+author: "Sabrina Nardin"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,      # show code
+  message = FALSE,  # suppress messages
+  warning = FALSE   # (optional) suppress warnings too
+)
+```
+
+This file includes some solutions to today's in-class exercise
+
+Load libraries and data:
+```{r}
+library(tidyverse)
+library(rcis)
+data(scorecard)
+```
+
+Explore data:
+```{r}
+glimpse(scorecard)
+```
+
+
+## Graph 1: Plot the annual total cost of school attendance across the U.S.
+
+For representing one continuous variable (here `cost`): the best graph is usually an **histogram.** It splits the input variable into "n" bins of equal width and does a frequency count within each set or bin. You can control the number of bins. 
+
+```{r}
+ggplot(data = scorecard, mapping = aes(x = cost)) +
+  geom_histogram()
+```
+
+Interpretation: What does this histogram tell us about the data? Distribution? Picks?
+
+Code: What are some alternative ways to rewrite this code (using what we know) to generate the SAME plot? These alternatives are all valid code. The original version and alternative 1 are the most common. For all of them you can remove the arguments (e.g., `data`, `mapping` but I suggest to leave them for clarity)
+
+```r
+# Alternative 1
+ggplot(data = scorecard) +
+  geom_histogram(mapping = aes(x = cost))
+```
+
+```r
+# Alternative 2
+ggplot() +
+  geom_histogram(data = scorecard, 
+                 mapping = aes(x = cost))
+```
+
+```r
+# Alternative 3 using `ggplot2` and `dplyr`
+scorecard %>%
+  ggplot(mapping = aes(x = cost)) +
+  geom_histogram()
+```
+
+**Histograms "stat = `"bin"`**
+
+```{r}
+ggplot(data = scorecard, mapping = aes(x = cost)) +
+  geom_histogram(stat = "bin", 
+                 bins = 30) # try changing the integer 
+```
+
+Each bar is a bin and represents one interval or set of data. For example, we can divide the data into 50, 30 (default), or 10 `bins` of equally sized bars: `geom_histogram()` counts how many observations fall into each bin (for continuous variables).
+
+Explore the documentation: Go online or type in your console `?geom_histogram()` to check the default stat of `geom_histogram()`. What do you notice? And what does that mean?
+
+
+**Adding title, labels, etc.**
+
+```{r}
+ggplot(data = scorecard, mapping = aes(x = cost)) +
+  geom_histogram() +
+  labs(
+    title = "Distribution of Annual College Attendance Costs",
+    x = "Published Annual Attendance Cost (USD)",
+    y = "Number of Colleges",
+    caption = paste("Data: College Scorecard (2018–2019; n =", nrow(scorecard), ")")
+  ) +
+  theme(
+    plot.title = element_text(size = 16),
+    plot.caption = element_text(size = 8, color = "gray")
+  )
+```
+
+Tip: Adding titles, axis labels, and captions is the way to go for finalized plots you plan to present or share. When you are exploring data, skip them: focus on understanding the patterns first (re-draw the plot, aggregate data, change the plot type, etc.); then polish only for the final graph
+
+
+
+## Graph 2: Plot the total number of schools in the U.S. by school type
+
+For representing one categorical variable (here `type`): the best graph is usually a **bar chart.** It takes each category of the categorical variable (here `"Public"`, `"Private nonprofit"`, `"Private for profit"`) and automatically applies a frequency count to aggregate the data by these categories. The idea is the same as `geom_histogram()` but for categorical variables.
+
+```{r}
+ggplot(scorecard, mapping = aes(x = type)) +
+  geom_bar() 
+```
+
+Interpretation: What does this bar chart tell us about the data?
+
+
+**Bar chart "`stat = count`"**
+
+```{r}
+ggplot(data = scorecard, mapping = aes(x = type)) +
+  geom_bar(stat = "count")
+```
+
+Here the idea is the same as the previous graph, but in this case for categorical variables. Each bar represents a category or group of data: `geom_bar()` automatically counts how many observations fall into each category, and displays these coutns on the y-axis. It does so because its default `stat` is `stat = "count"`, not `stat = identity` https://ggplot2.tidyverse.org/reference/geom_bar.html.
+
+Explore the documentation: Go online or type in your console `?geom_histogram()` to check the default stat of `geom_histogram()`. What do you notice? And what does that mean? Observe the default `stat`. 
+
+Code Challenge: Reproduce the same plot, but tell `geom_bar()` not to automatically count the data by setting `geom_bar(stats = "identity")`. Hint: You must first calculate the counts for each school type (you can use the `count()` function for it), and then manually supply the y to your plot
+
+```{r}
+# code challenge solution 
+
+```
+
+
+## Graph 3: Plot the annual total cost and net cost of attendance to schools in the U.S. 
+
+For representing two continuous variables (here `cost` and `netcost`): the best graph is usually a **scatter plot.** Each point represents an observation. The position of a point on the x-axis corresponds to one variable, while the position on y-axis corresponds to the other variable.
+
+```{r}
+ggplot(scorecard,
+  mapping = aes(x = cost, y = netcost)) +
+  geom_point()
+```
+
+Interpretation: What does this scatter plot tell us? What about the points not clearly aligned? What further EDA could we perform starting from this plot?
+
+Example of OK interpretation: As the advertised cost of attendance increases, the net cost also increases though with significant variations. Some schools have a much lower net cost than their advertised price. There is no clear alignment on the main diagonal, which implies that net costs tend to be lower than advertised costs for several schools, especially as the advertised cost increases. 
+
+
+## Graph 4: Plot the annual total cost of attendance by school type 
+
+For representing one continuous variable (here `cost`) and a one categorical variable (here `type`), the best graph is a usually a **box plot**. It summarizes the continuous variable distribution across each category of the categorical variables.
+
+```{r}
+ggplot(scorecard, mapping = aes(x = type, y = cost)) +
+  geom_boxplot()
+```
+
+Interpretation: What does this box plot tell us? How do we read a box plot? (see <https://d33wubrfki0l68.cloudfront.net/153b9af53b33918353fda9b691ded68cd7f62f51/5b616/images/eda-boxplot.png> from "R for Data Science" 1st Ed. Chapter 7
+
+Example of OK interpretation: On average, public universities are the least expensive, followed by private for-profit institutions. Other follow up questions to ask yourself: What does explain these differences? Is this in line with your previous knowledge or the literature on this topic?
+
+Other than using a box plot, we can represent this same task using a **faceted histogram**, which creates multiple windows (one for each level of the categorical variable). More formally, a faceted histogram looks at the distribution of a continuous variable (here `cost`) across different levels of the categorical variable (here `type`). The y-axis shows frequency count for each level of the categorical variable. Histograms cannot map a second variable directly, but we can use facets to compare the distribution of each college type.
+
+```{r}
+ggplot(scorecard,
+  mapping = aes(x = cost)) +
+  geom_histogram() +
+  facet_wrap(facets = vars(type), nrow = 3) # try without nrow or with nrow = 1
+```
+
+Compare this with the box plot. Which one do you prefer and why?
+
+
+## Graph 5: Plot the total annual cost of attendance and net cost of attendance by school type
+
+in this last example we are plotting three variables at the same time! We have two continuous variables (`cost` and `netcost`) and a categorical variable (`type` of school). We can use a **faceted *scatterplot** which plots each category of the categorical variable in a separate panel with the same scale range on the x and y. 
+
+```{r}
+ggplot(scorecard,
+  mapping = aes(x = cost, y = netcost)) +
+  geom_point() +
+  facet_wrap(facets = vars(type), nrow = 3) # try without nrow or with nrow = 1
+```
+
+Rather than using facets (for school type), we could use just the color aesthetic to incorporate the `type` info into the same visualization:
+```{r}
+ggplot(scorecard,
+  mapping = aes(x = cost, y = netcost, color = type)) +
+  geom_point()
+```
+
+Challenge: try to add a fourth variable, `debt`, and render it through the `size` aesthetic (e.g., `size = debt`). Does the plot look better? Likely not (tip: generally, it's best not to include more than three variables in a plot).
+
+```{r}
+# code challenge solution
+
+```
+ 
+## Other types of graphs
+
+Today we examined the most common graph options, but there are many other options we invite you to experiment with!
+
+For more ideas, check today's readings (see website) and the visualization cheat sheet: 
+
+* Help > Cheat Sheets > Data Visualization with ggplot2
+* Note there are several **cheat sheets** for tidyverse and R: https://posit.co/resources/cheatsheets/
