@@ -9,13 +9,14 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo = TRUE,      # show code
+  eval = TRUE,      
   message = FALSE,  # suppress messages
-  warning = FALSE   # (optional) suppress warnings too
+  warning = FALSE   # suppress warnings
 )
 ```
+What do these code chunks options mean? See [Lecture 1 slides](https://brinasab.github.io/css-website/lectures/01-slides.html#/r-markdown-handy-code-chunk-options)
 
-This file includes solutions to today's in-class exercise, with explanations of code and graphs.
+This Rmd document includes solutions to today's in-class exercise, with explanations of code and graphs. Note you can change the knitted output of this document in the YAML header above to word document, pdf, etc.
  
 Load libraries and data:
 ```{r}
@@ -48,11 +49,11 @@ ggplot(data = scorecard, mapping = aes(x = type)) +
   geom_bar(stat = "count")
 ```
 
-Note that `geom_bar()` automatically counts how many observations (rows) fall into each category and displays those counts on the y-axis. It does this because the default stat for `geom_bar()` is `stat = "count"`, not `stat = "identity"`.
+The default stat for `geom_bar()` is count, which means that `geom_bar()` automatically counts how many observations (rows) fall into each category and displays those counts on the y-axis. It does this because the default stat for `geom_bar()` is `stat = "count"`, not `stat = "identity"`.
 
 Documentation question: Go online at https://ggplot2.tidyverse.org/reference/geom_bar.html or type `?geom_bar()` in the console to check the default `stat` for `geom_bar()`. What do you notice?
 
-Code challenge:  Reproduce the same plot, but this time calculate the counts yourself first. Then tell `geom_bar()` to use those counts directly by setting stat = "identity". Hint: You must first calculate the counts for each school type. You can use the `count()` function for this, and then manually supply both `x` and `y` to your plot.
+Code challenge: Reproduce the same plot with `geom_bar()`, but this time calculate the counts yourself before plotting. Hint: First calculate the counts for each school type (you can use the `count()` function for this). Then manually supply both `x` and `y` to your plot.
 
 ```{r}
 # code challenge solution 
@@ -71,8 +72,7 @@ ggplot(data = scorecard_type_counts,
 
 Because we used `count()` first, the data are already summarized. The column `n` already contains the number of schools in each type. That is why we use `stat = "identity"`: we are telling ggplot to use the `n` column as it is, rather than counting the rows again.
 
-Note: There is another geom for bar charts called `geom_col()`. Use it when your data already contains the numbers you want to show as bar heights (e.g., they are already counted).
-
+Good to know: In ggplot2, there is another geom for bar charts called `geom_col()`. Use it when your data already contains the numbers you want to show as bar heights (e.g., they are already counted, you must provide them as y) VS. use `geom_bar()` when you want the ggplot to count rows for you as default behavior. 
 ```{r}
 # Same plot using geom_col()
 ggplot(data = scorecard_type_counts, 
@@ -80,7 +80,7 @@ ggplot(data = scorecard_type_counts,
   geom_col()
 ```
 
-In short (for bar charts), use `geom_bar()` when you want ggplot to count rows for you, use `geom_col()` when the bar heights are already in your data. This is because technically, `geom_bar()` counts rows by default, while `geom_col()` uses the y-values you provide. This means that `geom_col()` is similar to writing `geom_bar(stat = "identity")`.
+In short, using `geom_col()` is similar to writing `geom_bar(stat = "identity")` with your provided count.
 
 
 ## Graph 2: Plot the annual total cost of school attendance across the U.S.
@@ -111,14 +111,15 @@ ggplot() +
 
 ```r
 # Alternative 3 using `ggplot2` and `dplyr`
-scorecard %>%
+# We learn dplyr next week
+scorecard |>
   ggplot(mapping = aes(x = cost)) +
   geom_histogram()
 ```
 
 **Histograms "stat = `"bin"`**
 
-One thing to notice is that the default stat for `geom_histogram()` is "bin", not "count" as with `geom_bar()`. This is because histograms work with continuous variables (whereas bar graphs work with categorical variables).
+One thing to notice is that also `geom_histogram()` has a default stat which is "bin", not "count" as with `geom_bar()`. This is because histograms are for continuous variables (whereas bar graphs are for categorical variables).
 
 With a continuous variable, the categories do not already exist in the data like for categorical variables. Before ggplot can count anything, it first divides the x-variable into intervals or categories, called bins. Then it counts how many observations fall into each bin.
 
@@ -150,7 +151,7 @@ ggplot(data = scorecard, mapping = aes(x = cost)) +
   )
 ```
 
-Tip: Titles, axis labels, and captions are important for finalized plots that you plan to present or share. During exploratory data analysis, it is often better to focus first on understanding the patterns: redraw the plot, aggregate the data, change the plot type, or adjust the variables. Once you know what you want to show, polish the final graph.
+Tip: Titles, axis labels, and captions are important for finalized plots that you plan to present or share. During exploratory data analysis, focus first on understanding the patterns using simple plots so you can easily redraw the plot, aggregate the data, change the plot type, or adjust the variables. Once you know what you want to show, polish the final graph with labels and themes.
 
 
 ## Graph 3: Plot the annual total cost and net cost of attendance to schools in the U.S. 
@@ -158,8 +159,7 @@ Tip: Titles, axis labels, and captions are important for finalized plots that yo
 To represent two continuous variables, here `cost` and `netcost`, the best graph is a **scatter plot**. Each point represents an observation. The position of a point on the x-axis corresponds to one variable, while the position on y-axis corresponds to the other variable.
 
 ```{r}
-ggplot(scorecard,
-  mapping = aes(x = cost, y = netcost)) +
+ggplot(scorecard,mapping = aes(x = cost, y = netcost)) +
   geom_point()
 ```
 
@@ -211,7 +211,7 @@ ggplot(scorecard,
   geom_point()
 ```
 
-Challenge: Try to add a fourth variable, `debt`, and represent it through the `size` aesthetic, for example `size = debt`. Does the plot become more informative, or harder to read? 
+Challenge: Try to add a fourth variable, `debt`, and represent it through the `size` aesthetic, for example `size = debt`. Does the plot become more informative or not?
  
 ```{r}
 # code challenge solution
@@ -223,7 +223,6 @@ ggplot(scorecard,
   geom_point()
 ```
  
-
 This plot includes more information, but it is also harder to interpret. The color aesthetic already asks the reader to compare school types. Adding point size for debt adds another layer, but it can make the graph visually busy and harder to read. In general, it is often best not to include more than three variables in a single plot. Thus, a better approach is to create a separate plot focused only on debt, or to facet by school type and use size more selectively. 
 
 
@@ -233,7 +232,7 @@ Today we examined several common graph types, but there are many other options t
 
 For more graph ideas, check today's readings on the course website and the visualization cheat sheet:
 
-* Help > Cheat Sheets > Data Visualization with ggplot2
+* From R go to Help > Cheat Sheets > Data Visualization with ggplot2
 * Posit also has several cheat sheets for the tidyverse and R: <https://posit.co/resources/cheatsheets/>
 
-
+Disclaimer: All content developed by Sabrina Nardin. UChicago Claude Enterprise used to check for typos and improve clarity of explanation. 
